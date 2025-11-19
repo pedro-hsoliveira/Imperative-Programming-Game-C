@@ -108,22 +108,18 @@ void SpawnProjectile(Vector2 position, Vector2 velocity)
     }
 }
 
-// Geração do Mapa 16x16 (Corrigida)
+// Geração do Mapa 16x16
 void GenerateMap(void)
 {
     int roomsCreated = 0;
-    
-    // === LOOP DE GARANTIA ===
-    // Repete todo o processo se o mapa gerado for muito pequeno (menos de 8 salas)
+
     do {
-        // 1. Reseta tudo
         memset(map, 0, sizeof(map));
         roomsCreated = 0;
         int frontierCount = 0;
         Vector2 frontier[GRID_SIZE * GRID_SIZE];
         
-        // 2. Define o Início (Sua lógica nova)
-        playerRoomX = GetRandomValue(1, GRID_SIZE - 2); // Ajustei para -2 para garantir margem
+        playerRoomX = GetRandomValue(1, GRID_SIZE - 2);
         playerRoomY = GetRandomValue(1, GRID_SIZE - 2);
         map[playerRoomX][playerRoomY].exists = true;
         map[playerRoomX][playerRoomY].type = ROOM_START;
@@ -135,7 +131,6 @@ void GenerateMap(void)
         int dx[] = { 0, 0, 1, -1 };
         int dy[] = { -1, 1, 0, 0 };
 
-        // 3. Expansão (Drunken Walk)
         while (roomsCreated < MAX_ROOMS && currentFrontierIndex < frontierCount)
         {
             Vector2 current = frontier[currentFrontierIndex++];
@@ -147,8 +142,6 @@ void GenerateMap(void)
                 
                 if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE && !map[nx][ny].exists)
                 {
-                    // DICA: Aumentei a chance para 50% (0 ou 1) para evitar mapas muito vazios
-                    // Se quiser manter 1/3, volte para GetRandomValue(0, 2) == 0
                     if (GetRandomValue(0, 2) == 0) 
                     {
                         map[nx][ny].exists = true;
