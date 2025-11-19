@@ -7,10 +7,10 @@ int main(void)
     int quit = 0;
 
     // declaring the font
-    Font default_font = LoadFontEx("assets/upheavtt.ttf", FONT_SIZE, NULL, 256);
+    Font default_font = LoadFontEx("../assets/upheavtt.ttf", FONT_SIZE, NULL, 256);
     
     // initializing the background image for the title 
-    Image background_image = LoadImage("assets/the_bending_of_aang_logo.jpeg");
+    Image background_image = LoadImage("../assets/the_bending_of_aang_logo.jpeg");
 
     // converting the title image to a texture
     Texture background_texture = LoadTextureFromImage(background_image);
