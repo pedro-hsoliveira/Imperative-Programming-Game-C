@@ -5,7 +5,7 @@
 #include "raylib.h"
 #include "raymath.h"
 #include "screens/screens.h"
-#include "gameplay/room.h"
+#include "gameplay/room/room.h"
 #include <math.h>
 #include <stddef.h>
 
