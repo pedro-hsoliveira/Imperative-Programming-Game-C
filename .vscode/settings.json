@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "map.h": "c",
+        "raylib.h": "c",
+        "player.h": "c",
+        "screens.h": "c",
+        "room.h": "c",
+        "math.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
+}
