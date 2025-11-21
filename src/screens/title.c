@@ -1,4 +1,4 @@
-#include "main.h"
+#include "screens.h"
 
 void draw_title(Font default_font, Texture2D default_image, int selected_option);
 

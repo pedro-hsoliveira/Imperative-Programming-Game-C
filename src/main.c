@@ -28,6 +28,8 @@ int main(void)
 
         BeginDrawing();
 
+            ClearBackground(RAYWHITE);
+
             // switch case to manage the screens
             switch (current_screen) {
                 case QUIT:
@@ -70,7 +72,7 @@ int main(void)
                     break;
 
                 case GAMEPLAY:
-                    // code
+                    
 
                     break;
                 
