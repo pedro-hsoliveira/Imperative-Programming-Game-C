@@ -7,7 +7,7 @@
 
 #include "raylib.h"
 #include "raymath.h"
-
+#include "entidades\player\player.c"
 #include "screens/screens.h"
 #include "gameplay/room/room.h"
 #include "gameplay/game.h"

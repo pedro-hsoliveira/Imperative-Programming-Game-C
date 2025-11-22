@@ -3,7 +3,8 @@
 int main(void)
 {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "The Bending of Aang");
-
+ 
+    
     int quit = 0, first_iteration = 1;
 
     float delta_time = 0;
@@ -12,11 +13,15 @@ int main(void)
     Font default_font = LoadFontEx("../assets/upheavtt.ttf", FONT_SIZE, NULL, 256);
     
     // initializing the images 
-    Image background_image = LoadImage("../assets/the_bending_of_aang_logo.jpeg");
+    Image background_image = LoadImage("../assets/the_bending_of_aang_logo.png");
 
     Image room_image = LoadImage("../assets/dafult_room.png");
 
     // resizing the images
+
+    Player player;
+    InitPlayer(&player);
+
 
     ImageResize(&room_image, SCREEN_WIDTH, SCREEN_HEIGHT);
 
@@ -92,7 +97,14 @@ int main(void)
 
                 case GAMEPLAY:
                     draw_room(room_texture);
+                    UpdatePlayer(&player);
 
+                    // Desenha fundo e player
+                    DrawPlayer(&player);
+                    
+                    // Voltar ao menu
+                    if (IsKeyPressed(KEY_ESCAPE))
+                        current_screen = TITLE;
                     break;
                 
                 case ENDING:
