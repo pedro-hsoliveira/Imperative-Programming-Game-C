@@ -3,6 +3,8 @@
         "screens.h": "c",
         "game.h": "c",
         "raylib.h": "c",
-        "stdbool.h": "c"
+        "stdbool.h": "c",
+        "door_manager.h": "c",
+        "stdio.h": "c"
     }
 }
