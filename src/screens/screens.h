@@ -7,10 +7,7 @@
 #include <math.h>
 #include <stddef.h>
 
-// defining screen dimensions and font size
-#define SCREEN_WIDTH 1000
-#define SCREEN_HEIGHT 500
-#define FONT_SIZE 32
+#include "../define.h"
 
 // defining game screens
 typedef enum GameScreen {QUIT = -1, LOGO, TITLE, CREDITS, SETTINGS, GAMEPLAY, ENDING} GameScreen;

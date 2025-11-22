@@ -1,11 +1,5 @@
 #include "map.h"
 
-static Room map[GRID_SIZE][GRID_SIZE] = { 0 };
-static int playerRoomX = 0;
-static int playerRoomY = 0;
-static int bossRoomX = 0;
-static int bossRoomY = 0;
-
 void dijkstra(Vector2 starting_room) {
     // Atribui todas as distancias iniciais do mapa para infinito 
     for (int i = 0; i < GRID_SIZE; i++) {

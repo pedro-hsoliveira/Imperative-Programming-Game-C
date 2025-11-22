@@ -1,17 +1,14 @@
-#ifndef ROOM_H
-#define ROOM_H
+#ifndef MAP_H
+#define MAP_H
 
 #include "raylib.h"
 #include "raymath.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <time.h>
 
-#define SCREEN_WIDTH 1000
-#define SCREEN_HEIGHT 500
-
-#define GRID_SIZE 8
-#define MAX_ROOMS 16
+#include "../../define.h"
 
 typedef enum {
     ROOM_EMPTY,
@@ -32,6 +29,12 @@ typedef enum {
     STATE_PLAYING,
     STATE_TRANSITIONING
 } GameState;
+
+static Room map[GRID_SIZE][GRID_SIZE] = { 0 };
+static int playerRoomX = 0;
+static int playerRoomY = 0;
+static int bossRoomX = 0;
+static int bossRoomY = 0;
 
 void GenerateMap();
 void DrawMap();

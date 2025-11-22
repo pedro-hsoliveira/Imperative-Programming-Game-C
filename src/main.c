@@ -4,18 +4,32 @@ int main(void)
 {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "The Bending of Aang");
 
-    int quit = 0;
+    int quit = 0, first_iteration = 1;
+
+    float delta_time = 0;
 
     // declaring the font
     Font default_font = LoadFontEx("../assets/upheavtt.ttf", FONT_SIZE, NULL, 256);
     
-    // initializing the background image for the title 
+    // initializing the images 
     Image background_image = LoadImage("../assets/the_bending_of_aang_logo.jpeg");
 
-    // converting the title image to a texture
+    Image room_image = LoadImage("../assets/dafult_room.png");
+
+    // resizing the images
+
+    ImageResize(&room_image, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+    ImageResize(&background_image, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+    // converting the resized images to textures
     Texture background_texture = LoadTextureFromImage(background_image);
 
+    Texture room_texture = LoadTextureFromImage(room_image);
+
     UnloadImage(background_image);
+
+    UnloadImage(room_image);
 
     // defining the initial game screen
     GameScreen current_screen = LOGO;
@@ -25,6 +39,9 @@ int main(void)
     // game loop
     while (!WindowShouldClose() && !quit)
     {
+
+        delta_time = GetFrameTime();
+
 
         BeginDrawing();
 
@@ -51,6 +68,8 @@ int main(void)
                 case TITLE:
                     current_screen = title(default_font, background_texture);
 
+                    if (!first_iteration) first_iteration = 1;
+
                     break;
 
                 case CREDITS:
@@ -72,7 +91,7 @@ int main(void)
                     break;
 
                 case GAMEPLAY:
-                    
+                    draw_room(room_texture);
 
                     break;
                 
