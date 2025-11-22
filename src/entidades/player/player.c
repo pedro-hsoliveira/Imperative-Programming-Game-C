@@ -46,7 +46,7 @@ void InitPlayer(Player *p)
 {   
     p->hitboxRadius = 18.0f; 
     
-    // Inicia no meio da sala (aproximado)
+    
     p->body.position = (Vector2){ 
         roomMain.x + roomMain.width/2, 
         roomMain.y + roomMain.height/2 
@@ -60,33 +60,37 @@ void InitPlayer(Player *p)
     p->head.timer = 0;
     p->head.animSpeed = 0.15f;
 
+
+    p->hp = 6.0f;       
+    p->maxHp = 6.0f;
+    
     p->fireRate = 0.4f;
     p->fireCooldown = 0;
 
     // Carregamento de Sprites (Mantido igual)
     for (int i = 0; i < 6; i++)
     {
-        p->bodySprites.frente[i]   = LoadTexture(TextFormat("assets/sprites/player/tronco_perna/frente%d.png",   i+1));
-        p->bodySprites.tras[i]     = LoadTexture(TextFormat("assets/sprites/player/tronco_perna/tras%d.png",     i+1));
-        p->bodySprites.esquerda[i] = LoadTexture(TextFormat("assets/sprites/player/tronco_perna/direita%d.png", i+1));
-        p->bodySprites.direita[i]  = LoadTexture(TextFormat("assets/sprites/player/tronco_perna/esquerda%d.png",  i+1));
+        p->bodySprites.frente[i]   = LoadTexture(TextFormat("../assets/sprites/player/tronco_perna/frente%d.png",   i+1));
+        p->bodySprites.tras[i]     = LoadTexture(TextFormat("../assets/sprites/player/tronco_perna/tras%d.png",     i+1));
+        p->bodySprites.esquerda[i] = LoadTexture(TextFormat("../assets/sprites/player/tronco_perna/direita%d.png", i+1));
+        p->bodySprites.direita[i]  = LoadTexture(TextFormat("../assets/sprites/player/tronco_perna/esquerda%d.png",  i+1));
     }
 
-    p->bodySprites.idle = LoadTexture("assets/sprites/player/tronco_perna/parado1.png");
+    p->bodySprites.idle = LoadTexture("../assets/sprites/player/tronco_perna/parado1.png");
     p->bodySprites.frame = 0;
     p->bodySprites.timer = 0;
     p->bodySprites.animSpeed = 0.10f;
 
     // SPRITES DA CABEÇA
-    p->headSprites.frente[0]   = LoadTexture("assets/sprites/player/cabeca/frente1.png");
-    p->headSprites.frente[1]   = LoadTexture("assets/sprites/player/cabeca/frente2.png");
-    p->headSprites.tras[0]     = LoadTexture("assets/sprites/player/cabeca/tras1.png");
-    p->headSprites.tras[1]     = LoadTexture("assets/sprites/player/cabeca/tras2.png");
-    p->headSprites.esquerda[0] = LoadTexture("assets/sprites/player/cabeca/esquerda1.png");
-    p->headSprites.esquerda[1] = LoadTexture("assets/sprites/player/cabeca/esquerda2.png");
-    p->headSprites.direita[0]  = LoadTexture("assets/sprites/player/cabeca/direita1.png");
-    p->headSprites.direita[1]  = LoadTexture("assets/sprites/player/cabeca/direita2.png");
-    p->headSprites.idle        = LoadTexture("assets/sprites/player/cabeca/parado1.png");
+    p->headSprites.frente[0]   = LoadTexture("../assets/sprites/player/cabeca/frente1.png");
+    p->headSprites.frente[1]   = LoadTexture("../assets/sprites/player/cabeca/frente2.png");
+    p->headSprites.tras[0]     = LoadTexture("../assets/sprites/player/cabeca/tras1.png");
+    p->headSprites.tras[1]     = LoadTexture("../assets/sprites/player/cabeca/tras2.png");
+    p->headSprites.esquerda[0] = LoadTexture("../assets/sprites/player/cabeca/esquerda1.png");
+    p->headSprites.esquerda[1] = LoadTexture("../assets/sprites/player/cabeca/esquerda2.png");
+    p->headSprites.direita[0]  = LoadTexture("../assets/sprites/player/cabeca/direita1.png");
+    p->headSprites.direita[1]  = LoadTexture("../assets/sprites/player/cabeca/direita2.png");
+    p->headSprites.idle        = LoadTexture("../assets/sprites/player/cabeca/parado1.png");
 
     p->spriteWidth  = p->bodySprites.frente[0].width;
     p->spriteHeight = p->bodySprites.frente[0].height;  
@@ -175,6 +179,12 @@ static bool IsInsidePlayableArea(Vector2 pos, float radius)
     return false;
 }
 
+
+void DamagePlayer(Player *p, float dmg)
+{
+    p->hp -= dmg;
+    if (p->hp < 0) p->hp = 0;
+}
 // Update principal do Player
 void UpdatePlayer(Player *p)
 {
@@ -267,6 +277,7 @@ void UpdatePlayer(Player *p)
     // Projéteis
     if (p->fireCooldown > 0.0f) p->fireCooldown -= dt;
     UpdateProjectiles(p, dt);
+
 }
 
 // Player Desenho
@@ -274,6 +285,9 @@ void DrawPlayer(Player *p)
 {
     float scale = 2.0f;
 
+    for (int i = 0; i < p->hp; i++){
+    DrawCircle(30 + i * 20, 30, 8, RED);
+    }
     // ============================================================
     // DEBUG: DESENHAR RETÂNGULOS DE COLISÃO
     // Use isso para ajustar os valores lá em cima no código!

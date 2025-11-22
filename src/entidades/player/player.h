@@ -5,7 +5,7 @@
 #include <math.h>
 #include "raymath.h"
 #include <stdbool.h>
-
+#include "../enemy/enemy.h"
 #define MAX_PROJECTILES 200
 
 // 4 direções 
@@ -69,11 +69,17 @@ typedef struct {
     HeadSprites headSprites;
     Projectile projectiles[MAX_PROJECTILES];
     
+    
     bool isMovingHead; 
     bool isMovingBody;
     bool isMoving;
+
+    float hp;   
+    float maxHp;
+
     float fireCooldown;
     float fireRate;
+
     float hitboxRadius;    
     float spriteWidth;      
     float spriteHeight;     

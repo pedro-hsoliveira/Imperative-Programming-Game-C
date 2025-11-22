@@ -10,12 +10,12 @@ int main(void)
     float delta_time = 0;
 
     // declaring the font
-    Font default_font = LoadFontEx("assets/upheavtt.ttf", FONT_SIZE, NULL, 256);
+    Font default_font = LoadFontEx("../assets/upheavtt.ttf", FONT_SIZE, NULL, 256);
     
     // initializing the images 
-    Image background_image = LoadImage("assets/the_bending_of_aang_logo.png");
+    Image background_image = LoadImage("../assets/the_bending_of_aang_logo.png");
 
-    Image room_image = LoadImage("assets/dafult_room.png");
+    Image room_image = LoadImage("../assets/dafult_room.png");
 
     // resizing the images
 
