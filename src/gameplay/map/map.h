@@ -30,6 +30,13 @@ typedef enum {
     STATE_TRANSITIONING
 } GameState;
 
+typedef struct {
+    Room grid[MAP_HEIGHT][MAP_WIDTH];
+    // Adicione estes dois campos:
+    int currentRoomX; 
+    int currentRoomY;
+} Map;
+
 static Room map[GRID_SIZE][GRID_SIZE] = { 0 };
 static int playerRoomX = 0;
 static int playerRoomY = 0;
@@ -39,5 +46,6 @@ static int bossRoomY = 0;
 void GenerateMap();
 void DrawMap();
 void DrawMiniMap();
+void InitMap(Map *map);
 
 #endif

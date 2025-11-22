@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "screens.h": "c"
+        "screens.h": "c",
+        "game.h": "c",
+        "raylib.h": "c"
     }
 }
