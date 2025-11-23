@@ -1,5 +1,5 @@
 #include "player.h"
-
+#include "entidades/enemy/enemy.h"
 // ============================================================================
 // CONFIGURAÇÃO DA SALA (ÁREA JOGÁVEL)
 // Ajuste estes valores olhando para as linhas vermelhas na tela!
@@ -7,7 +7,7 @@
 
 // Retângulo 1: O chão principal (o "grosso" da sala)
 // Dica: Tente ajustar para cobrir o chão central, ignorando as portas por enquanto.
-static Rectangle roomMain = { 
+Rectangle roomMain = { 
     .x = 190,      // Distância da borda esquerda da tela até o começo do chão
     .y = 120,      // Distância do topo da tela até o começo do chão
     .width = 650,  // Largura total do chão
@@ -16,7 +16,7 @@ static Rectangle roomMain = {
 
 // Retângulo 2: Corredor Horizontal (Porta Esq <-> Porta Dir)
 // Útil se as portas ficarem um pouco para fora do retângulo principal
-static Rectangle roomHori = { 
+Rectangle roomHori = { 
     .x = 80,       // Começa um pouco antes do main
     .y = 340,       // Altura centralizada verticalmente (aprox)
     .width = 880,   // Mais largo que o main para pegar as portas
@@ -24,8 +24,8 @@ static Rectangle roomHori = {
 };
 
 // Retângulo 3: Corredor Vertical (Porta Cima <-> Porta Baixo)
-// Útil se as portas de cima/baixo ficarem para fora
-static Rectangle roomVert = { 
+// Útil se as portas de  cima/baixo ficarem para for
+Rectangle roomVert = { 
     .x = 470,       // Centralizado horizontalmente (aprox)
     .y = 80,        // Começa mais acima que o main
     .width = 80,    // Largura da porta
@@ -39,6 +39,8 @@ static Texture2D LoadTex(const char *file)
     return LoadTexture(file);
 }
 
+
+
 // ----------------------------------------------------
 // Inicializar player
 // ----------------------------------------------------
@@ -51,6 +53,8 @@ void InitPlayer(Player *p)
         roomMain.x + roomMain.width/2, 
         roomMain.y + roomMain.height/2 
     };
+
+    p->alive = true;
 
     p->body.speed = 200;
     p->body.direction = DIR_DOWN;
@@ -67,6 +71,8 @@ void InitPlayer(Player *p)
     p->fireRate = 0.4f;
     p->fireCooldown = 0;
 
+    p->heartsSheet = LoadTexture("../assets/sprites/interface/vida.png");
+    p->heartFrame = (Rectangle){ 0, 0, 16, 15 };
     // Carregamento de Sprites (Mantido igual)
     for (int i = 0; i < 6; i++)
     {
@@ -97,6 +103,45 @@ void InitPlayer(Player *p)
 
     for (int i = 0; i < MAX_PROJECTILES; i++)
         p->projectiles[i].active = false;
+}
+
+
+static void DrawHeartFrame(Texture2D sheet, Rectangle frame, Vector2 pos, float scale)
+{
+    DrawTexturePro(
+        sheet,
+        frame,
+        (Rectangle){ pos.x, pos.y, frame.width * scale, frame.height * scale },
+        (Vector2){ 0, 0 },
+        0,
+        WHITE
+    );
+}
+//VIDA
+static void DrawHealth(Player *p)
+{
+    float scale = 3.0f;   // ESCALA 3x
+    int fullHearts = (int)p->hp / 2;
+    bool halfHeart = ((int)p->hp % 2) == 1;
+
+    int totalHearts = (int)p->maxHp / 2;
+
+    for (int i = 0; i < totalHearts; i++)
+    {
+        Vector2 pos = {
+            30 + i * (16 * scale + 6),
+            30
+        };
+
+        if (i < fullHearts)
+            p->heartFrame.x = 0;       // Coração cheio
+        else if (i == fullHearts && halfHeart)
+            p->heartFrame.x = 16;      // Meio coração
+        else
+            p->heartFrame.x = 32;      // Coração vazio
+
+        DrawHeartFrame(p->heartsSheet, p->heartFrame, pos, scale);
+    }
 }
 
 // Disparo 
@@ -139,19 +184,41 @@ static void LimitProjectileInsideRoom(Projectile *pr)
     }
 }
 
-// Atualiza projéteis
+extern Enemy enemies[MAX_ENEMIES];
+
+
 static void UpdateProjectiles(Player *p, float dt)
 {
     for (int i = 0; i < MAX_PROJECTILES; i++)
     {
-        if (!p->projectiles[i].active) continue;
+        Projectile *pr = &p->projectiles[i];
 
-        p->projectiles[i].position.x += p->projectiles[i].direction.x * p->projectiles[i].speed * dt;
-        p->projectiles[i].position.y += p->projectiles[i].direction.y * p->projectiles[i].speed * dt;
+        if (!pr->active) continue;
 
-        LimitProjectileInsideRoom(&p->projectiles[i]);
+        // mover projétil
+        pr->position.x += pr->direction.x * pr->speed * dt;
+        pr->position.y += pr->direction.y * pr->speed * dt;
+
+        // se sair da sala → desativa
+        LimitProjectileInsideRoom(pr);
+
+        // verificar colisão com o inimigo
+        for (int e = 0; e < MAX_ENEMIES; e++){
+            if (!enemies[e].alive) continue;
+
+            float dist = Vector2Distance(pr->position, enemies[e].position);
+
+            if (dist <= enemies[e].radius + 6){
+                EnemyTakeDamage(&enemies[e], 1);
+                pr->active = false;
+                break;
+            }
+        }
     }
 }
+
+
+
 
 // ====================================================
 // NOVA LÓGICA DE COLISÃO
@@ -180,16 +247,25 @@ static bool IsInsidePlayableArea(Vector2 pos, float radius)
 }
 
 
-void DamagePlayer(Player *p, float dmg)
+void PlayerTakeDamage(Player *p, float dmg)
 {
+    if (!p->alive) return;
+
     p->hp -= dmg;
-    if (p->hp < 0) p->hp = 0;
+
+    if (p->hp <= 0)
+    {
+        p->hp = 0;
+        p->alive = false;
+    }
 }
+
+
 // Update principal do Player
 void UpdatePlayer(Player *p)
 {
     float dt = GetFrameTime();
-
+    if (!p->alive) return;
     p->isMovingBody = false;
     p->isMovingHead = false;
 
@@ -276,18 +352,24 @@ void UpdatePlayer(Player *p)
 
     // Projéteis
     if (p->fireCooldown > 0.0f) p->fireCooldown -= dt;
+
     UpdateProjectiles(p, dt);
+    DoorManager_UpdateTransition(&p->body.position, p->hitboxRadius);
+
 
 }
 
 // Player Desenho
+
+
+
 void DrawPlayer(Player *p)
 {
     float scale = 2.0f;
 
-    for (int i = 0; i < p->hp; i++){
-    DrawCircle(30 + i * 20, 30, 8, RED);
-    }
+
+    if (!p->alive) return;
+    DrawHealth(p);
     // ============================================================
     // DEBUG: DESENHAR RETÂNGULOS DE COLISÃO
     // Use isso para ajustar os valores lá em cima no código!

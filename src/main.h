@@ -11,5 +11,9 @@
 #include "screens/screens.h"
 #include "gameplay/room/room.h"
 #include "gameplay/game.h"
+#include "entidades/enemy/enemy.h"
+#include "gameplay/map/map.h"
+
+extern Rectangle roomMain; 
 
 #endif

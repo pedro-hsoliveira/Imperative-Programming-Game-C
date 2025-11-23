@@ -1,5 +1,6 @@
 #include "room.h"
 
+
 void draw_room(Texture2D room_sprite) {
     float scale = ((float) SCREEN_WIDTH)/((float) room_sprite.width);
 

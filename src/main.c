@@ -1,5 +1,9 @@
 #include "main.h"
 
+Enemy enemies[MAX_ENEMIES];
+
+
+
 int main(void)
 {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "The Bending of Aang");
@@ -22,7 +26,10 @@ int main(void)
     Player player;
     InitPlayer(&player);
 
+    
+   SpawnEnemiesRandom(enemies, MAX_ENEMIES, roomMain, player.body.position);
 
+    
     ImageResize(&room_image, SCREEN_WIDTH, SCREEN_HEIGHT);
 
     ImageResize(&background_image, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -101,19 +108,35 @@ int main(void)
                     break;
 
                 case GAMEPLAY:
-                    draw_room(room_texture);
-                    UpdatePlayer(&player);
+                draw_room(room_texture);
 
-                    // Desenha fundo e player
-                    DrawPlayer(&player);
-                    
-                    // Voltar ao menu
-                    if (IsKeyPressed(KEY_ESCAPE))
-                        current_screen = TITLE;
+                // Atualiza player
+                UpdatePlayer(&player);
+
+                // Atualiza inimigo
+                for (int i = 0; i < MAX_ENEMIES; i++) UpdateEnemy(&enemies[i], player.body.position, delta_time);
+
+                // Colisão inimigo -> player
+                for (int i = 0; i < MAX_ENEMIES; i++)
+                EnemyTryAttack(&enemies[i], &player, delta_time);
+                if (!player.alive){
+                    current_screen = ENDING;   
                     break;
+                }
+
+                // Desenhar tudo
+                DrawPlayer(&player);
+                for (int i = 0; i < MAX_ENEMIES; i++)DrawEnemy(&enemies[i]);
+                
+
+                // Voltar ao menu
+                if (IsKeyPressed(KEY_ESCAPE))
+                    current_screen = TITLE;
+
+                break;
+
                 
                 case ENDING:
-                    // code
 
                     break;
             }

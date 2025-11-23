@@ -4,6 +4,7 @@
 #include "raylib.h"
 #include "../define.h"
 #include "room/room.h"
+#include "../entidades/player/player.h"
 #include "map/map.h"
 
 void game(Texture2D room_texture, Texture2D aang_texture);

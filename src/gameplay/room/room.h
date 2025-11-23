@@ -5,5 +5,6 @@
 #include "../../define.h"
 
 void draw_room(Texture2D room_sprite);
+extern Rectangle roomMain;
 
 #endif

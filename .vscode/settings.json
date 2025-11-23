@@ -5,6 +5,10 @@
         "raylib.h": "c",
         "stdbool.h": "c",
         "door_manager.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "map.h": "c",
+        "player.h": "c",
+        "enemy.h": "c",
+        "room.h": "c"
     }
 }

@@ -5,7 +5,10 @@
 #include <math.h>
 #include "raymath.h"
 #include <stdbool.h>
-#include "../enemy/enemy.h"
+#include "../../gameplay/map/door_manager.h"
+#include "../../gameplay/room/room.h"
+
+
 #define MAX_PROJECTILES 200
 
 // 4 direções 
@@ -68,11 +71,14 @@ typedef struct {
     BodySprites bodySprites;
     HeadSprites headSprites;
     Projectile projectiles[MAX_PROJECTILES];
-    
+    Texture2D heartsSheet;
+    Rectangle heartFrame;
+
     
     bool isMovingHead; 
     bool isMovingBody;
     bool isMoving;
+    bool alive;
 
     float hp;   
     float maxHp;
@@ -82,11 +88,17 @@ typedef struct {
 
     float hitboxRadius;    
     float spriteWidth;      
-    float spriteHeight;     
+    float spriteHeight; 
+      
 } Player;
+
 
 void InitPlayer(Player *p);
 void UpdatePlayer(Player *p);
+void PlayerTakeDamage(Player *p, float dmg);
 void DrawPlayer(Player *p);
+static void DrawHeartFrame(Texture2D sheet, Rectangle frame, Vector2 pos, float scale);
+static void DrawHealth(Player *p);
+
 
 #endif
