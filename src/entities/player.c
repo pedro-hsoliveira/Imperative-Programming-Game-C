@@ -312,14 +312,6 @@ void DrawPlayer(Player *p)
 
     if (!p->alive) return;
     DrawHealth(p);
-    // ============================================================
-    // DEBUG: DESENHAR RETÂNGULOS DE COLISÃO
-    // Use isso para ajustar os valores lá em cima no código!
-    // ============================================================
-    DrawRectangleLinesEx(roomMain, 2.0f, RED);   // Retângulo Principal
-    DrawRectangleLinesEx(roomHori, 2.0f, BLUE);  // Corredor Horizontal
-    DrawRectangleLinesEx(roomVert, 2.0f, GREEN); // Corredor Vertical
-    // ============================================================
 
     // Desenha Sombra (opcional, ajuda na profundidade)
     DrawEllipse(p->body.position.x, p->body.position.y, 10, 5, (Color){0,0,0,100});
