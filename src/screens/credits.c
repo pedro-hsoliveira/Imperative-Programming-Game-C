@@ -11,6 +11,5 @@ void credits(Font default_font, Texture2D default_image)
     DrawTextEx(default_font, "Pedro Henrique <phso>", (Vector2) {x_names , SCREEN_HEIGHT * 0.25}, FONT_SIZE, 2, WHITE);
     DrawTextEx(default_font, "Lucas David <ldlf>", (Vector2) {x_names , SCREEN_HEIGHT * 0.35}, FONT_SIZE, 2, WHITE);
     DrawTextEx(default_font, "Joyce Gabriele <jgsp3>", (Vector2) {x_names , SCREEN_HEIGHT * 0.45}, FONT_SIZE, 2, WHITE);
-    DrawTextEx(default_font, "Guilherme Verás <gav2>", (Vector2) {x_names , SCREEN_HEIGHT * 0.55}, FONT_SIZE, 2, WHITE);
 
 }

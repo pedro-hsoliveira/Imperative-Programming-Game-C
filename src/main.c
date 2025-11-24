@@ -1,17 +1,38 @@
 #include "main.h"
 
-Enemy enemies[MAX_ENEMIES];
+Rectangle roomMain = { 
+    .x = 190,      
+    .y = 120,      
+    .width = 650,  
+    .height = 540  
+};
 
+Rectangle roomHori = { 
+    .x = 80,       
+    .y = 340,      
+    .width = 880,  
+    .height = 90   
+};
 
+Rectangle roomVert = { 
+    .x = 470,      
+    .y = 80,       
+    .width = 80,       
+    .height = 620
+};
 
 int main(void)
 {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "The Bending of Aang");
  
-    
+    // Initialize audio
+    InitAudioDevice();
+
     int quit = 0, first_iteration = 1;
 
     float delta_time = 0;
+
+    Map current_map;
 
     // declaring the font
     Font default_font = LoadFontEx("../assets/upheavtt.ttf", FONT_SIZE, NULL, 256);
@@ -26,10 +47,6 @@ int main(void)
     Player player;
     InitPlayer(&player);
 
-    
-   SpawnEnemiesRandom(enemies, MAX_ENEMIES, roomMain, player.body.position);
-
-    
     ImageResize(&room_image, SCREEN_WIDTH, SCREEN_HEIGHT);
 
     ImageResize(&background_image, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -43,6 +60,14 @@ int main(void)
 
     UnloadImage(room_image);
 
+
+    // gameplay music 
+    Music musicgame = LoadMusicStream("../assets/audio/musicgame.mp3");
+
+    // MENU / TITLE / LOGO music 
+    Music musicplay = LoadMusicStream("../assets/audio/musicplay.mp3");
+    SetMusicVolume(musicplay, 0.2f);
+    PlayMusicStream(musicplay);
     // defining the initial game screen
     GameScreen current_screen = LOGO;
 
@@ -53,6 +78,12 @@ int main(void)
     {
 
         delta_time = GetFrameTime();
+
+        // update gameplay music 
+        UpdateMusicStream(musicgame);
+
+        // update menu music 
+        UpdateMusicStream(musicplay);
 
 
         BeginDrawing();
@@ -65,6 +96,12 @@ int main(void)
                     quit = 1;
 
                 case LOGO:
+
+                    if (!IsMusicStreamPlaying(musicplay)) {
+                        StopMusicStream(musicgame);
+                        PlayMusicStream(musicplay);
+                    }
+
                     draw_logo(default_font, background_texture);
 
                     if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE)){
@@ -78,9 +115,14 @@ int main(void)
                     break;
                 
                 case TITLE:
-                    current_screen = title(default_font, background_texture);
 
-                    if (!first_iteration) first_iteration = 1;
+                    // ensure correct music
+                    if (!IsMusicStreamPlaying(musicplay)) {
+                        StopMusicStream(musicgame);
+                        PlayMusicStream(musicplay);
+                    }
+
+                    current_screen = title(default_font, background_texture);
 
                     if (WindowShouldClose()) {
                         current_screen = QUIT;
@@ -90,6 +132,13 @@ int main(void)
                     break;
 
                 case CREDITS:
+
+                    // ensure correct music
+                    if (!IsMusicStreamPlaying(musicplay)) {
+                        StopMusicStream(musicgame);
+                        PlayMusicStream(musicplay);
+                    }
+                    
                     credits(default_font, background_texture);
 
                     if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ESCAPE)){
@@ -103,40 +152,52 @@ int main(void)
                     break;
 
                 case SETTINGS:
+                // ensure correct music
+                    if (!IsMusicStreamPlaying(musicplay)) {
+                        StopMusicStream(musicgame);
+                        PlayMusicStream(musicplay);
+                    }
                     //code
                 
                     break;
 
                 case GAMEPLAY:
-                draw_room(room_texture);
 
-                // Atualiza player
-                UpdatePlayer(&player);
+                    SetMusicVolume(musicgame, 0.1f);
+                    // switch to gameplay music
+                    if (!IsMusicStreamPlaying(musicgame)) {
+                        StopMusicStream(musicplay);
+                        PlayMusicStream(musicgame);
+                    }
+                    if (first_iteration) {
+                        current_map = GenerateMap();
+                        first_iteration = 0;
+                    }
 
-                // Atualiza inimigo
-                for (int i = 0; i < MAX_ENEMIES; i++) UpdateEnemy(&enemies[i], player.body.position, delta_time);
+                    game(room_texture, room_texture, &player, &current_map);
 
-                // Colisão inimigo -> player
-                for (int i = 0; i < MAX_ENEMIES; i++)
-                EnemyTryAttack(&enemies[i], &player, delta_time);
-                if (!player.alive){
-                    current_screen = ENDING;   
+                    if (!player.alive){
+                        current_screen = ENDING;   
+                        break;
+                    
+                    }
+
+
+                    // Voltar ao menu
+                    if (IsKeyPressed(KEY_ESCAPE))
+                        current_screen = TITLE;
+
                     break;
-                }
-
-                // Desenhar tudo
-                DrawPlayer(&player);
-                for (int i = 0; i < MAX_ENEMIES; i++)DrawEnemy(&enemies[i]);
-                
-
-                // Voltar ao menu
-                if (IsKeyPressed(KEY_ESCAPE))
-                    current_screen = TITLE;
-
-                break;
 
                 
                 case ENDING:
+                    // ensure correct music
+                    if (!IsMusicStreamPlaying(musicplay)) {
+                        StopMusicStream(musicgame);
+                        PlayMusicStream(musicplay);
+                    }
+
+                    // ending screen logic
 
                     break;
             }
@@ -144,6 +205,11 @@ int main(void)
         EndDrawing();
 
     }
+
+    // unload gameplay music 
+    UnloadMusicStream(musicgame);
+    UnloadMusicStream(musicplay);
+    CloseAudioDevice();
 
     CloseWindow();
 

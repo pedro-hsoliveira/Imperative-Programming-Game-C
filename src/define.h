@@ -23,8 +23,13 @@
 // Margem de segurança para o player não ficar preso na parede ao trocar de sala
 #define SPAWN_OFFSET  60.0f 
 
+#define MAX_ENEMIES 6
+
 #define MAP_WIDTH  10
 #define MAP_HEIGHT 10
 
+extern Rectangle roomMain;
+extern Rectangle roomHori;
+extern Rectangle roomVert;
 
 #endif
