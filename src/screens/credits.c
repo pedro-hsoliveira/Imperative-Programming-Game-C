@@ -1,6 +1,6 @@
 #include "screens.h"
 
-void credits(Font default_font, Texture2D default_image)
+void credits(Font default_font)
 {
     int x_names = SCREEN_WIDTH * 0.1;
 

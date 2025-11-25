@@ -2,7 +2,6 @@
 #define ENTITIES_H
 
 #include "raylib.h"
-#include <math.h>
 #include "raymath.h"
 #include <stdbool.h>
 #include "../define.h"
@@ -87,6 +86,8 @@ typedef struct {
     float spriteWidth;      
     float spriteHeight; 
       
+    float desired_velocity;
+    float current_velocity;
 } Player;
 
 typedef struct {
@@ -115,8 +116,9 @@ void InitPlayer(Player *p);
 void UpdatePlayer(Player *p);
 void PlayerTakeDamage(Player *p, float dmg);
 void DrawPlayer(Player *p);
-static void DrawHeartFrame(Texture2D sheet, Rectangle frame, Vector2 pos, float scale);
-static void DrawHealth(Player *p);
+void DrawHeartFrame(Texture2D sheet, Rectangle frame, Vector2 pos, float scale);
+void DrawHealth(Player *p);
+void clear_projectiles(Player *p);
 
 void InitEnemy(Enemy *e, Vector2 pos);
 void EnemyTakeDamage(Enemy *e, float dmg);

@@ -21,8 +21,9 @@ Rectangle roomVert = {
     .height = 620
 };
 
-int main(void)
-{
+int main(void) {
+    ChangeDirectory(GetApplicationDirectory());
+
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "The Bending of Aang");
  
     // Initialize audio
@@ -30,43 +31,81 @@ int main(void)
 
     int quit = 0, first_iteration = 1;
 
-    float delta_time = 0;
-
     Map current_map;
 
     // declaring the font
     Font default_font = LoadFontEx("../assets/upheavtt.ttf", FONT_SIZE, NULL, 256);
     
     // initializing the images 
-    Image background_image = LoadImage("../assets/the_bending_of_aang_logo.png");
+    Image logo_image = LoadImage("../assets/the_bending_of_aang_logo.png");
+    Image victory_image = LoadImage("../assets/victory_screen.png");
+    Image defeat_image = LoadImage("../assets/defeat_screen.png");
 
-    Image room_image = LoadImage("../assets/dafult_room.png");
+    Image room_image = LoadImage("../assets/default_room.png");
 
-    // resizing the images
+    Image original_door_image = LoadImage("../assets/locked_door_sprite.png"); // will preserve the dimensions and the orientation
+    
+    Image top_door_image = ImageCopy(original_door_image);
+    Image bottom_door_image = ImageCopy(original_door_image);
+    Image right_door_image = ImageCopy(original_door_image);
+    Image left_door_image = ImageCopy(original_door_image);
 
     Player player;
+
+    Game current_game;
+
     InitPlayer(&player);
 
+    // resizing the images
     ImageResize(&room_image, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    ImageResize(&background_image, SCREEN_WIDTH, SCREEN_HEIGHT);
+    ImageResize(&logo_image, SCREEN_WIDTH, SCREEN_HEIGHT);
+    ImageResize(&victory_image, SCREEN_WIDTH, SCREEN_HEIGHT);
+    ImageResize(&defeat_image, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+    ImageResize(&top_door_image, 120, 90);
+    
+    ImageResize(&bottom_door_image, 120, 90);
+    ImageRotate(&bottom_door_image, 180);
+
+    ImageResize(&left_door_image, 140, 90);
+    ImageRotate(&left_door_image, 270);
+
+    ImageResize(&right_door_image, 140, 90);
+    ImageRotate(&right_door_image, 90);
 
     // converting the resized images to textures
-    Texture background_texture = LoadTextureFromImage(background_image);
+    Texture logo_texture = LoadTextureFromImage(logo_image);
+    Texture victory_texture = LoadTextureFromImage(victory_image);
+    Texture defeat_texture = LoadTextureFromImage(defeat_image);
 
     Texture room_texture = LoadTextureFromImage(room_image);
 
-    UnloadImage(background_image);
+    Texture top_door_texture = LoadTextureFromImage(top_door_image);
+    Texture right_door_texture = LoadTextureFromImage(right_door_image);
+    Texture bottom_door_texture = LoadTextureFromImage(bottom_door_image);
+    Texture left_door_texture = LoadTextureFromImage(left_door_image);
+
+    UnloadImage(logo_image);
 
     UnloadImage(room_image);
 
+    UnloadImage(original_door_image);
+    UnloadImage(top_door_image);
+    UnloadImage(bottom_door_image);
+    UnloadImage(left_door_image);
+    UnloadImage(right_door_image);
+
+    Texture2D doors_textures[4] = {top_door_texture, left_door_texture, bottom_door_texture, right_door_texture};
 
     // gameplay music 
     Music musicgame = LoadMusicStream("../assets/audio/musicgame.mp3");
 
     // MENU / TITLE / LOGO music 
     Music musicplay = LoadMusicStream("../assets/audio/musicplay.mp3");
-    SetMusicVolume(musicplay, 0.2f);
+
+
+    SetMusicVolume(musicplay, 0.05f);
     PlayMusicStream(musicplay);
     // defining the initial game screen
     GameScreen current_screen = LOGO;
@@ -76,9 +115,6 @@ int main(void)
     // game loop
     while (!quit)
     {
-
-        delta_time = GetFrameTime();
-
         // update gameplay music 
         UpdateMusicStream(musicgame);
 
@@ -94,6 +130,7 @@ int main(void)
             switch (current_screen) {
                 case QUIT:
                     quit = 1;
+                    break;
 
                 case LOGO:
 
@@ -102,7 +139,7 @@ int main(void)
                         PlayMusicStream(musicplay);
                     }
 
-                    draw_logo(default_font, background_texture);
+                    draw_logo(default_font, logo_texture);
 
                     if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE)){
                         current_screen = TITLE;
@@ -122,7 +159,13 @@ int main(void)
                         PlayMusicStream(musicplay);
                     }
 
-                    current_screen = title(default_font, background_texture);
+                    if (first_iteration) {
+                        current_map = GenerateMap();
+                        InitPlayer(&player);
+                        first_iteration = 0;
+                    }
+
+                    current_screen = title(default_font, logo_texture);
 
                     if (WindowShouldClose()) {
                         current_screen = QUIT;
@@ -139,7 +182,7 @@ int main(void)
                         PlayMusicStream(musicplay);
                     }
                     
-                    credits(default_font, background_texture);
+                    credits(default_font);
 
                     if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ESCAPE)){
                         current_screen = TITLE;
@@ -163,21 +206,17 @@ int main(void)
 
                 case GAMEPLAY:
 
-                    SetMusicVolume(musicgame, 0.1f);
+                    SetMusicVolume(musicgame, 0.05f);
                     // switch to gameplay music
                     if (!IsMusicStreamPlaying(musicgame)) {
                         StopMusicStream(musicplay);
                         PlayMusicStream(musicgame);
                     }
-                    if (first_iteration) {
-                        current_map = GenerateMap();
-                        first_iteration = 0;
-                    }
 
-                    game(room_texture, room_texture, &player, &current_map);
+                    game(room_texture, doors_textures, &player, &current_map, current_game, &current_screen);
 
                     if (!player.alive){
-                        current_screen = ENDING;   
+                        current_screen = DEFEAT;
                         break;
                     
                     }
@@ -189,15 +228,35 @@ int main(void)
 
                     break;
 
-                
-                case ENDING:
+                case DEFEAT:
                     // ensure correct music
+                    first_iteration = 1;
                     if (!IsMusicStreamPlaying(musicplay)) {
                         StopMusicStream(musicgame);
                         PlayMusicStream(musicplay);
                     }
 
-                    // ending screen logic
+                    draw_defeat(defeat_texture, default_font);
+
+                    if(IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ESCAPE)){
+                        current_screen = LOGO;
+                    }
+
+                    break;
+                    
+                    case VICTORY:
+                    first_iteration = 1;
+                    
+                    if (!IsMusicStreamPlaying(musicplay)) {
+                        StopMusicStream(musicgame);
+                        PlayMusicStream(musicplay);
+                    }
+
+                    draw_victory(victory_texture, default_font);
+
+                    if(IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ESCAPE)){
+                        current_screen = LOGO;
+                    }
 
                     break;
             }
@@ -206,10 +265,23 @@ int main(void)
 
     }
 
-    // unload gameplay music 
+    // unloading gameplay music 
     UnloadMusicStream(musicgame);
     UnloadMusicStream(musicplay);
     CloseAudioDevice();
+
+    // unloading textures
+    UnloadTexture(logo_texture);
+    UnloadTexture(victory_texture);
+    UnloadTexture(defeat_texture);
+    UnloadTexture(room_texture);
+    UnloadTexture(top_door_texture);
+    UnloadTexture(right_door_texture);
+    UnloadTexture(bottom_door_texture);
+    UnloadTexture(left_door_texture);
+    
+    // unloading font
+    UnloadFont(default_font);
 
     CloseWindow();
 

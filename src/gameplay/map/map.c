@@ -53,6 +53,8 @@ void dijkstra(Vector2 starting_room, Map *map) {
 
 Map GenerateMap()
 {
+    int playerRoomX, playerRoomY;
+
     Map map;
 
     int roomsCreated = 0;
@@ -63,9 +65,6 @@ Map GenerateMap()
         int frontierCount = 0;
         Vector2 frontier[GRID_SIZE * GRID_SIZE];
         
-        // Reset boss and player locations just in case
-        bossRoomX = -1; bossRoomY = -1;
-
         playerRoomX = GetRandomValue(1, GRID_SIZE - 2);
         playerRoomY = GetRandomValue(1, GRID_SIZE - 2);
         map.grid[playerRoomX][playerRoomY].exists = true;
@@ -133,12 +132,10 @@ Map GenerateMap()
     // Aplica o Boss na melhor sala encontrada
     if (bestBossX != -1) {
         map.grid[bestBossX][bestBossY].type = ROOM_BOSS;
-        bossRoomX = bestBossX;
-        bossRoomY = bestBossY;
-        map.grid[bestBossX][bestBossY].doors_state = DOORS_CLOSED;
+        map.grid[bestBossX][bestBossY].doors_state = DOORS_OPEN;
 
-        printf("Map Generated. Boss Distance: %f\n", maxDist);
     } else {
+        exit(1);
         printf("Error: Could not place boss.\n");
     }
 

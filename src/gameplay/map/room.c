@@ -1,7 +1,17 @@
-#include "room.h"
+#include "map.h"
 
 void draw_empty_room(Texture2D room_sprite) {
     DrawTextureEx(room_sprite, (Vector2) {0, 0}, 0, 1, GRAY);
+
+}
+
+void draw_doors(Map map, Texture2D doors_textures[4]) {
+    // doors_textures = {TOP, LEFT, BOTTOM, RIGHT}
+
+    if (!next_room_available(TOP, map)) DrawTexture(doors_textures[0], 453, 44.74, RAYWHITE);
+    if (!next_room_available(LEFT, map)) DrawTexture(doors_textures[1], 55, 313.5, RAYWHITE);
+    if (!next_room_available(BOTTOM, map)) DrawTexture(doors_textures[2], 453, 640.71, RAYWHITE);
+    if (!next_room_available(RIGHT, map)) DrawTexture(doors_textures[3], 882, 313.5, RAYWHITE);
 
 }
 
@@ -16,7 +26,7 @@ void is_combat_over(Map *map) {
 }
     
 
-void initialize_combat_room(Texture2D room_sprite, Map *map, Player *player) {
+void initialize_combat_room(Map *map, Player *player) {
     map->grid[map->currentRoomX][map->currentRoomY].enemies_number = MAX_ENEMIES;
     SpawnEnemiesRandom(map->grid[map->currentRoomX][map->currentRoomY].enemies, MAX_ENEMIES, roomMain, player->body.position);
     map->grid[map->currentRoomX][map->currentRoomY].aang_entered = true;
@@ -68,9 +78,4 @@ void combat_room(Map *map, Player *player, float deltaTime) {
         }
     }
     is_combat_over(map);
-}
-
-void initialize_boss_room(Texture2D room_sprite, Map *map) {
-    map->grid[map->currentRoomX][map->currentRoomY].enemies_number = 1;    
-
 }

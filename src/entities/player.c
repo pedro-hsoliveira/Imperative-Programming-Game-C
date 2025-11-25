@@ -1,19 +1,11 @@
 #include "entities.h"
 
-static Texture2D LoadTex(const char *file)
-{
-    return LoadTexture(file);
-}
-
-
-
 // ----------------------------------------------------
 // Inicializar player
 // ----------------------------------------------------
 void InitPlayer(Player *p)
 {   
     p->hitboxRadius = 18.0f;
-    
     
     p->body.position = (Vector2){ 
         roomMain.x + roomMain.width/2, 
@@ -22,7 +14,7 @@ void InitPlayer(Player *p)
 
     p->alive = true;
 
-    p->body.speed = 200;
+    p->body.speed = 250; // Máxima velocidade (Max Speed)
     p->body.direction = DIR_DOWN;
 
     p->head.direction = DIR_DOWN;
@@ -30,6 +22,9 @@ void InitPlayer(Player *p)
     p->head.timer = 0;
     p->head.animSpeed = 0.15f;
 
+    // desired_velocity será definido dinamicamente no Update
+    p->desired_velocity = 0; 
+    p->current_velocity = 0;
 
     p->hp = 6.0f;       
     p->maxHp = 6.0f;
@@ -39,7 +34,8 @@ void InitPlayer(Player *p)
 
     p->heartsSheet = LoadTexture("../assets/sprites/interface/vida.png");
     p->heartFrame = (Rectangle){ 0, 0, 16, 15 };
-    // Carregamento de Sprites (Mantido igual)
+    
+    // Carregamento de Sprites
     for (int i = 0; i < 6; i++)
     {
         p->bodySprites.frente[i]   = LoadTexture(TextFormat("../assets/sprites/player/tronco_perna/frente%d.png",   i+1));
@@ -71,8 +67,7 @@ void InitPlayer(Player *p)
         p->projectiles[i].active = false;
 }
 
-
-static void DrawHeartFrame(Texture2D sheet, Rectangle frame, Vector2 pos, float scale)
+void DrawHeartFrame(Texture2D sheet, Rectangle frame, Vector2 pos, float scale)
 {
     DrawTexturePro(
         sheet,
@@ -83,8 +78,9 @@ static void DrawHeartFrame(Texture2D sheet, Rectangle frame, Vector2 pos, float 
         WHITE
     );
 }
+
 //VIDA
-static void DrawHealth(Player *p)
+void DrawHealth(Player *p)
 {
     float scale = 3.0f;   // ESCALA 3x
     int fullHearts = (int)p->hp / 2;
@@ -135,10 +131,8 @@ static void Shoot(Player *p)
 
 static void LimitProjectileInsideRoom(Projectile *pr)
 {
-    // Usa os limites do retângulo principal para destruir projéteis
     if (!CheckCollisionPointRec(pr->position, roomMain))
     {
-        // Dá uma margem extra antes de destruir
         float margin = 50.0f;
         Rectangle bounds = { 
             roomMain.x - margin, roomMain.y - margin, 
@@ -155,31 +149,22 @@ static void UpdateProjectiles(Player *p, float dt)
     for (int i = 0; i < MAX_PROJECTILES; i++)
     {
         Projectile *pr = &p->projectiles[i];
-
         if (!pr->active) continue;
 
-        // mover projétil
         pr->position.x += pr->direction.x * pr->speed * dt;
         pr->position.y += pr->direction.y * pr->speed * dt;
 
-        // se sair da sala → desativa
         LimitProjectileInsideRoom(pr);
     }
 }
-
-
-
 
 static bool IsInsidePlayableArea(Vector2 pos, float radius)
 {
     Rectangle* areas[] = { &roomMain, &roomHori, &roomVert };
 
-    // Verifica se o círculo do player está TOTALMENTE dentro de ALGUM retângulo
     for (int i = 0; i < 3; i++)
     {
         Rectangle r = *areas[i];
-
-        // Aritmética simples: Posição +/- raio deve estar dentro de (X, Y, W, H)
         if (pos.x - radius >= r.x &&
             pos.x + radius <= r.x + r.width &&
             pos.y - radius >= r.y &&
@@ -190,7 +175,6 @@ static bool IsInsidePlayableArea(Vector2 pos, float radius)
     }
     return false;
 }
-
 
 void PlayerTakeDamage(Player *p, float dmg)
 {
@@ -205,53 +189,38 @@ void PlayerTakeDamage(Player *p, float dmg)
     }
 }
 
-
 // Update principal do Player
 void UpdatePlayer(Player *p)
 {
     float dt = GetFrameTime();
     if (!p->alive) return;
+    
     p->isMovingBody = false;
     p->isMovingHead = false;
 
-    // MOVIMENTO (WASD)
+    // 1. INPUT
     Vector2 move = (Vector2){0};
     if (IsKeyDown(KEY_W)) move.y -= 1;
     if (IsKeyDown(KEY_S)) move.y += 1;
     if (IsKeyDown(KEY_A)) move.x -= 1;
     if (IsKeyDown(KEY_D)) move.x += 1;
 
-    if (move.x != 0 || move.y != 0)
+    bool hasInput = (move.x != 0 || move.y != 0);
+
+    // 2. DEFINE DESIRED VELOCITY E DIREÇÃO
+    if (hasInput)
     {
         p->isMovingBody = true;
+        p->isMovingHead = true;
         move = Vector2Normalize(move);
-        Vector2 velocity = Vector2Scale(move, p->body.speed * dt);
-        
-        // 1. Tentar movimento completo
-        Vector2 nextPos = Vector2Add(p->body.position, velocity);
-        
-        if (IsInsidePlayableArea(nextPos, p->hitboxRadius))
-        {
-            p->body.position = nextPos;
-        }
-        else 
-        {
-            // 2. Deslizar nas paredes (Wall Sliding)
-            // Tenta mover só em X
-            Vector2 nextPosX = { p->body.position.x + velocity.x, p->body.position.y };
-            if (IsInsidePlayableArea(nextPosX, p->hitboxRadius)) p->body.position.x = nextPosX.x;
+        p->desired_velocity = p->body.speed; // Alvo é a velocidade máxima (200)
 
-            // Tenta mover só em Y
-            Vector2 nextPosY = { p->body.position.x, p->body.position.y + velocity.y };
-            if (IsInsidePlayableArea(nextPosY, p->hitboxRadius)) p->body.position.y = nextPosY.y;
-        }
-
-        // Direção do corpo
+        // Atualiza direção do corpo baseada no input
         if (fabs(move.y) > fabs(move.x))
             p->body.direction = (move.y < 0 ? DIR_UP : DIR_DOWN);
         else
             p->body.direction = (move.x < 0 ? DIR_LEFT : DIR_RIGHT);
-
+            
         // Animação corpo
         p->bodySprites.timer += dt;
         if (p->bodySprites.timer >= p->bodySprites.animSpeed)
@@ -262,15 +231,66 @@ void UpdatePlayer(Player *p)
     }
     else
     {
+        p->desired_velocity = 0; // Alvo é parar
         p->bodySprites.frame = 0;
     }
 
-    // CABEÇA
+    float acceleration = 1200.0f; // (pixels/s^2)
+    float friction = 700.0f;      // (pixels/s^2)
+
+    if (p->current_velocity < p->desired_velocity)
+    {
+        p->current_velocity += acceleration * dt;
+        if (p->current_velocity > p->desired_velocity) 
+            p->current_velocity = p->desired_velocity;
+    }
+    else if (p->current_velocity > p->desired_velocity)
+    {
+        p->current_velocity -= friction * dt;
+        if (p->current_velocity < p->desired_velocity) 
+            p->current_velocity = p->desired_velocity;
+    }
+
+    if (p->current_velocity > 0)
+    {
+        Vector2 moveDirection;
+
+        if (hasInput) {
+            moveDirection = move;
+        } else {
+            switch (p->body.direction) {
+                case DIR_UP:    moveDirection = (Vector2){ 0, -1}; break;
+                case DIR_DOWN:  moveDirection = (Vector2){ 0,  1}; break;
+                case DIR_LEFT:  moveDirection = (Vector2){-1,  0}; break;
+                case DIR_RIGHT: moveDirection = (Vector2){ 1,  0}; break;
+                default:        moveDirection = (Vector2){ 0,  0}; break;
+            }
+        }
+
+        Vector2 velocity = Vector2Scale(moveDirection, p->current_velocity * dt);
+
+        Vector2 nextPos = Vector2Add(p->body.position, velocity);
+        
+        if (IsInsidePlayableArea(nextPos, p->hitboxRadius))
+        {
+            p->body.position = nextPos;
+        }
+        else 
+        {
+            Vector2 nextPosX = { p->body.position.x + velocity.x, p->body.position.y };
+            if (IsInsidePlayableArea(nextPosX, p->hitboxRadius)) p->body.position.x = nextPosX.x;
+
+            Vector2 nextPosY = { p->body.position.x, p->body.position.y + velocity.y };
+            if (IsInsidePlayableArea(nextPosY, p->hitboxRadius)) p->body.position.y = nextPosY.y;
+        }
+    }
+
     bool headPressed = false;
     if (IsKeyDown(KEY_UP))    { p->head.direction = DIR_UP;    headPressed = true; }
     if (IsKeyDown(KEY_DOWN))  { p->head.direction = DIR_DOWN;  headPressed = true; }
     if (IsKeyDown(KEY_LEFT))  { p->head.direction = DIR_LEFT;  headPressed = true; }
     if (IsKeyDown(KEY_RIGHT)) { p->head.direction = DIR_RIGHT; headPressed = true; }
+    if (!IsKeyDown(KEY_UP) && !IsKeyDown(KEY_DOWN) && !IsKeyDown(KEY_LEFT) && !IsKeyDown(KEY_RIGHT)) p->head.direction = p->body.direction;
 
     if (headPressed)
     {
@@ -302,18 +322,14 @@ void UpdatePlayer(Player *p)
 }
 
 // Player Desenho
-
-
-
 void DrawPlayer(Player *p)
 {
     float scale = 2.0f;
 
-
     if (!p->alive) return;
     DrawHealth(p);
 
-    // Desenha Sombra (opcional, ajuda na profundidade)
+    // Desenha Sombra
     DrawEllipse(p->body.position.x, p->body.position.y, 10, 5, (Color){0,0,0,100});
 
     // ===================== CORPO ======================
@@ -370,4 +386,12 @@ void DrawPlayer(Player *p)
     for (int i = 0; i < MAX_PROJECTILES; i++)
         if (p->projectiles[i].active)
             DrawCircleV(p->projectiles[i].position, 6, RED);
+}
+
+void clear_projectiles(Player *p)
+{
+    for (int i = 0; i < MAX_PROJECTILES; i++)
+    {
+        p->projectiles[i].active = false;
+    }
 }

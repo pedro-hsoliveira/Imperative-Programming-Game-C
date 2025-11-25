@@ -11,7 +11,7 @@ void InitEnemy(Enemy *e, Vector2 pos)
     e->position = pos;
     e->hp = 3.0f;
     e->maxHp = 2.0f;
-    e->radius = 18.0f;
+    e->radius = 24.0f;
     e->speed = 50.0f;
     e->alive = true;
 
@@ -42,6 +42,12 @@ static void UpdateEnemyAnimation(Enemy *e, float dt)
 
         int col = frame % 3;
         int row = frame / 3;
+
+        if (col > 0 && row == 2) {
+            col = 0;
+            row = 0;
+            e->sprite.currentFrame = 0;
+        }
 
         e->sprite.frame.x = col * e->sprite.frame.width;
         e->sprite.frame.y = row * e->sprite.frame.height;
@@ -223,10 +229,5 @@ void DrawEnemy(Enemy *e)
         0,
         WHITE
     );
-
-    // Barra de vida
-    DrawRectangle(e->position.x - 20, e->position.y - 40, 40, 6, DARKGRAY);
-    float hpPercent = e->hp / e->maxHp;
-    DrawRectangle(e->position.x - 20, e->position.y - 40, 40 * hpPercent, 6, GREEN);
 }
 

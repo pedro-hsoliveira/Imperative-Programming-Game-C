@@ -2,7 +2,6 @@
 #define MAP_H
 
 #include "raylib.h"
-#include "raymath.h"
 #include "../../entities/entities.h"
 
 #include <string.h>
@@ -18,6 +17,14 @@ typedef enum {
     ROOM_COMBAT,
     ROOM_BOSS
 } RoomType;
+
+typedef enum {
+    NONE = 0,
+    TOP,
+    LEFT,
+    BOTTOM,
+    RIGHT
+} opened_door;
 
 typedef enum {
     DOORS_OPEN,
@@ -44,15 +51,20 @@ typedef struct {
     // because of the way the map generator was designed, only for this struct, the X and Y coordinates are like cartesian coordinates, so, for example, if i want to go down a row, i need to decrement Y.
 } Map;
 
-static int playerRoomX = 0;
-static int playerRoomY = 0;
-static int bossRoomX = 0;
-static int bossRoomY = 0;
-
 void dijkstra(Vector2 starting_room, Map *map);
 Map GenerateMap();
 void DrawMap();
 void DrawMiniMap(Map map);
 void InitMap(Map *map);
+
+bool next_room_available(opened_door door, Map map);
+opened_door door_colision_verifier(Player player);
+void room_changer(Player *player);
+
+void draw_doors(Map map, Texture2D doors_textures[4]);
+
+void draw_empty_room(Texture2D room_sprite);
+void initialize_combat_room(Map *map, Player *player);
+void combat_room(Map *map, Player *player, float deltaTime);
 
 #endif

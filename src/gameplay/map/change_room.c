@@ -1,4 +1,4 @@
-#include "change_room.h"
+#include "map.h"
 
 Rectangle left_door = {74.67, 340.98, 66.69, 70.84};
 Rectangle right_door = {892.05, 340.98, 71.25, 70.84};
@@ -9,6 +9,7 @@ static const float TELEPORT_CLEARANCE = 25.0f; // ajuste se precisar
 
 bool next_room_available(opened_door door, Map map) {
     switch (door) {
+        case (NONE): return false;
         case (TOP):
             if (map.currentRoomY - 1 >= 0) {
                 if (map.grid[map.currentRoomX][map.currentRoomY - 1].exists) return true;
