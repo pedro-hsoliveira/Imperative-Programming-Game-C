@@ -2,7 +2,8 @@
 #define MAP_H
 
 #include "raylib.h"
-#include "raymath.h"
+#include "../../entities/entities.h"
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -17,27 +18,53 @@ typedef enum {
     ROOM_BOSS
 } RoomType;
 
-typedef struct Room {
+typedef enum {
+    NONE = 0,
+    TOP,
+    LEFT,
+    BOTTOM,
+    RIGHT
+} opened_door;
+
+typedef enum {
+    DOORS_OPEN,
+    DOORS_CLOSED
+
+} DoorsState;
+
+typedef struct {
     bool exists;
     bool visited;
+    bool aang_entered;
     float minimum_distance;
+    Enemy enemies[MAX_ENEMIES];
+    int enemies_number;
     RoomType type;
+    DoorsState doors_state;
+    
 } Room;
 
-// --- Jogo ---
-typedef enum {
-    STATE_PLAYING,
-    STATE_TRANSITIONING
-} GameState;
+typedef struct {
+    Room grid[MAP_HEIGHT][MAP_WIDTH];
+    int currentRoomX;
+    int currentRoomY;
+    // because of the way the map generator was designed, only for this struct, the X and Y coordinates are like cartesian coordinates, so, for example, if i want to go down a row, i need to decrement Y.
+} Map;
 
-static Room map[GRID_SIZE][GRID_SIZE] = { 0 };
-static int playerRoomX = 0;
-static int playerRoomY = 0;
-static int bossRoomX = 0;
-static int bossRoomY = 0;
-
-void GenerateMap();
+void dijkstra(Vector2 starting_room, Map *map);
+Map GenerateMap();
 void DrawMap();
-void DrawMiniMap();
+void DrawMiniMap(Map map);
+void InitMap(Map *map);
+
+bool next_room_available(opened_door door, Map map);
+opened_door door_colision_verifier(Player player);
+void room_changer(Player *player);
+
+void draw_doors(Map map, Texture2D doors_textures[4]);
+
+void draw_empty_room(Texture2D room_sprite);
+void initialize_combat_room(Map *map, Player *player);
+void combat_room(Map *map, Player *player, float deltaTime);
 
 #endif
