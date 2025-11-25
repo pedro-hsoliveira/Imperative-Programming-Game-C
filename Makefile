@@ -1,34 +1,47 @@
-# general parameters
-CFLAGS = -Wall -Wextra -g -Iraylib/src -DPLATFORM_DESKTOP
-SOURCES = src/main.c \
-	 $(wildcard src/entities/*.c) \
-	 $(wildcard src/screens/*.c) \
-	 $(wildcard src/gameplay/game.c) \
-	 $(wildcard src/gameplay/map/*.c) \
-	 $(wildcard raylib/src/*.c)
+GAME_NAME = theBendingOfAang
 
-# linux parameters
-CC_LINUX = gcc
-LIBS_LINUX = -lGL -lm -lpthread -ldl -lrt -lX11
-OUT_LINUX = build/theBendingOfAang
+CC = gcc
+CFLAGS = -Wall -std=c99 -D_DEFAULT_SOURCE -Wno-missing-braces -g -Isrc -Iraylib/src
 
-# windows parameters
-CC_WIN = x86_64-w64-mingw32-gcc
-LIBS_WIN = -lopengl32 -lgdi32 -lwinmm -static
-OUT_WIN = build/theBendingOfAang.exe
+# recursively finds all .c files in src
+rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
 
-# makefile will, by default, create both executables
-all: linux windows
+SRC_FILES = $(call rwildcard, src, *.c)
 
-linux: $(SOURCES)
-	# creates the build directory if it doesn't exists
-	mkdir -p build
-	$(CC_LINUX) $(CFLAGS) $(SOURCES) -o $(OUT_LINUX) $(LIBS_LINUX)
+# object files go into build/ directory, mirroring src/ structure
+OBJS = $(SRC_FILES:%.c=build/%.o)
 
-windows: $(SOURCES)
-	# same thing siad above
-	mkdir -p build
-	$(CC_WIN) $(CFLAGS) $(SOURCES) -o $(OUT_WIN) $(LIBS_WIN)
+# plataform-specific settings
+UNAME_S := $(shell uname -s)
+
+ifeq ($(OS),Windows_NT)
+    # windows flags
+    PLATFORM_OS = WINDOWS
+    EXEC_EXT = .exe
+    LDFLAGS = -Lraylib/src -lraylib -lopengl32 -lgdi32 -lwinmm
+else
+    # linux flags
+    PLATFORM_OS = LINUX
+    EXEC_EXT = 
+    LDFLAGS = -Lraylib/src -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+endif
+
+TARGET = build/$(GAME_NAME)$(EXEC_EXT)
+
+.PHONY: all clean run raylib_build
+
+all: raylib_build $(TARGET)
+
+raylib_build:
+	$(MAKE) -C raylib/src
+
+$(TARGET): $(OBJS)
+	$(CC) $(OBJS) -o $(TARGET) $(LDFLAGS)
+
+build/%.o: %.c
+	mkdir -p $(dir $@)
+	$(CC) -c $< -o $@ $(CFLAGS)
 
 clean:
-	rm -f build/theBendingOfAang build/theBendingOfAang.exe
+	rm -rf build
+	$(MAKE) -C raylib/src clean
