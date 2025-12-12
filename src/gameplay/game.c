@@ -51,7 +51,7 @@ void game(Texture2D room_texture, Texture2D doors_textures[4], Player *player, M
         break;
         case (ROOM_BOSS):
             if (game.isGameOver) {
-                *currentScreen = VICTORY;
+                *currentScreen = TRANSITION;
 
             }
         

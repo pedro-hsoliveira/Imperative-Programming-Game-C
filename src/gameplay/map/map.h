@@ -32,6 +32,12 @@ typedef enum {
 
 } DoorsState;
 
+typedef enum {
+    GREEN_MAP,
+    DARK_MAP
+
+} MapType;
+
 typedef struct {
     bool exists;
     bool visited;

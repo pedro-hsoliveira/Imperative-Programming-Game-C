@@ -8,6 +8,12 @@
 
 #define MAX_PROJECTILES 200
 
+// verifica o tipo de inimigo
+typedef enum{
+    ENEMY_MELEE,
+    ENEMY_SLOW_TANK,
+} EnemyType;
+
 // 4 direções 
 typedef enum{
     DIR_UP,
@@ -109,6 +115,8 @@ typedef struct {
 
     float attackCooldown;   
     float attackRate;
+
+    EnemyType type;
 } Enemy;
 
 
@@ -120,7 +128,7 @@ void DrawHeartFrame(Texture2D sheet, Rectangle frame, Vector2 pos, float scale);
 void DrawHealth(Player *p);
 void clear_projectiles(Player *p);
 
-void InitEnemy(Enemy *e, Vector2 pos);
+void InitEnemy(Enemy *e, Vector2 pos, EnemyType type);
 void EnemyTakeDamage(Enemy *e, float dmg);
 void UpdateEnemy(Enemy *e, Vector2 playerPos, float dt);
 bool EnemyCheckCollisionWithPlayer(Enemy *e, Vector2 playerPos, float radius);
