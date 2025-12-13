@@ -1,8 +1,46 @@
 #include "entities.h"
+#include <stdio.h>
 
 // ======================================================
 // Inicializa um inimigo em uma posição específica
 // ======================================================
+
+static Sound fxEnemyHit; 
+static bool soundsLoaded = false;
+
+// ======================================================
+// Funções de Gerenciamento de Áudio (CHAME NO MAIN)
+// ======================================================
+void LoadEnemySounds(void)
+{
+    if (!soundsLoaded)
+    {
+        printf("--- TENTANDO CARREGAR O SOM DO INIMIGO ---\n");
+        
+        // Tente carregar
+        fxEnemyHit = LoadSound("../assets/audio/enemy_hit.mp3");
+        
+        // VERIFICAÇÃO: Se o som não carregou, o frameCount geralmente é 0 ou stream.buffer é NULL
+        if (fxEnemyHit.frameCount == 0) {
+            printf("ERRO CRÍTICO: O arquivo de som NAO foi carregado!\n");
+            printf("Verifique se o arquivo existe em: ../assets/audio/enemy_hit.wav\n");
+        } else {
+            printf("SUCESSO: Som carregado corretamente!\n");
+        }
+
+        SetSoundVolume(fxEnemyHit, 1.0f);
+        soundsLoaded = true; 
+    }
+}
+
+void UnloadEnemySounds(void)
+{
+    if (soundsLoaded)
+    {
+        UnloadSound(fxEnemyHit);
+        soundsLoaded = false;
+    }
+}
 
 void InitEnemy(Enemy *e, Vector2 pos)
 {
@@ -60,11 +98,22 @@ void EnemyTakeDamage(Enemy *e, float dmg)
 
     e->hp -= dmg;
 
+    // Toca o som apenas uma vez quando toma o dano
+    if (soundsLoaded) {
+        PlaySound(fxEnemyHit);
+    }
+
     if (e->hp <= 0)
     {
         e->hp = 0;
         e->alive = false;
+        // Opcional: Tocar um som diferente de morte aqui
     }
+}
+ 
+void DamageEnemy(Enemy *e, float dmg)
+{
+    EnemyTakeDamage(e, dmg); // Reutiliza a lógica e o som
 }
 // ======================================================
 // Movimento básico: perseguir o player
@@ -191,18 +240,6 @@ void UpdateEnemy(Enemy *e, Vector2 playerPos, float dt)
 
     UpdateEnemyAnimation(e, dt);
 
-}
-// ======================================================
-// Dano no inimigo
-// ======================================================
-void DamageEnemy(Enemy *e, float dmg)
-{
-    e->hp -= dmg;
-    if (e->hp <= 0.0f)
-    {
-        e->alive = false;
-        e->hp = 0.0f;
-    }
 }
 
 // ======================================================

@@ -29,6 +29,9 @@ int main(void) {
     // Initialize audio
     InitAudioDevice();
 
+    LoadEnemySounds();
+    LoadPlayerSounds();
+
     int quit = 0, first_iteration = 1;
 
     Map current_map;
@@ -268,6 +271,8 @@ int main(void) {
     // unloading gameplay music 
     UnloadMusicStream(musicgame);
     UnloadMusicStream(musicplay);
+    UnloadEnemySounds();
+    UnloadPlayerSounds();
     CloseAudioDevice();
 
     // unloading textures

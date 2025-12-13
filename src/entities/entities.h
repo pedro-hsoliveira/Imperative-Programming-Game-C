@@ -120,12 +120,19 @@ void DrawHeartFrame(Texture2D sheet, Rectangle frame, Vector2 pos, float scale);
 void DrawHealth(Player *p);
 void clear_projectiles(Player *p);
 
+void LoadPlayerSounds(void);
+void UnloadPlayerSounds(void);
+
+void LoadEnemySounds(void);
+void UnloadEnemySounds(void);
+
 void InitEnemy(Enemy *e, Vector2 pos);
 void EnemyTakeDamage(Enemy *e, float dmg);
 void UpdateEnemy(Enemy *e, Vector2 playerPos, float dt);
 bool EnemyCheckCollisionWithPlayer(Enemy *e, Vector2 playerPos, float radius);
 bool EnemyCheckCollisionWithProjectile(Enemy *e, Projectile *pr);
 bool EnemyTryAttack(Enemy *e, Player *p, float dt); 
+void DamageEnemy(Enemy *e, float dmg);
 
 void DrawEnemy(Enemy *e);
 void SpawnEnemiesRandom(Enemy enemies[], int count, Rectangle room, Vector2 playerPos);
