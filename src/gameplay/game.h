@@ -13,6 +13,8 @@ typedef struct {
     Player player;
     Map map;
     bool isGameOver;
+    bool onGoingGame;
+    int match;
 
 } Game;
 
