@@ -8,6 +8,12 @@
 
 #define MAX_PROJECTILES 200
 
+// verifica o tipo de inimigo
+typedef enum{
+    ENEMY_MELEE,
+    ENEMY_SLOW_TANK,
+} EnemyType;
+
 // 4 direções 
 typedef enum{
     DIR_UP,
@@ -109,6 +115,8 @@ typedef struct {
 
     float attackCooldown;   
     float attackRate;
+
+    EnemyType type;
 } Enemy;
 
 
@@ -120,21 +128,20 @@ void DrawHeartFrame(Texture2D sheet, Rectangle frame, Vector2 pos, float scale);
 void DrawHealth(Player *p);
 void clear_projectiles(Player *p);
 
-void LoadPlayerSounds(void);
-void UnloadPlayerSounds(void);
-
-void LoadEnemySounds(void);
-void UnloadEnemySounds(void);
-
-void InitEnemy(Enemy *e, Vector2 pos);
+void InitEnemy(Enemy *e, Vector2 pos, EnemyType type);
 void EnemyTakeDamage(Enemy *e, float dmg);
 void UpdateEnemy(Enemy *e, Vector2 playerPos, float dt);
 bool EnemyCheckCollisionWithPlayer(Enemy *e, Vector2 playerPos, float radius);
 bool EnemyCheckCollisionWithProjectile(Enemy *e, Projectile *pr);
 bool EnemyTryAttack(Enemy *e, Player *p, float dt); 
-void DamageEnemy(Enemy *e, float dmg);
 
 void DrawEnemy(Enemy *e);
 void SpawnEnemiesRandom(Enemy enemies[], int count, Rectangle room, Vector2 playerPos);
+
+void LoadPlayerSounds(void);
+void UnloadPlayerSounds(void);
+
+void LoadEnemySounds(void);
+void UnloadEnemySounds(void);
 
 #endif

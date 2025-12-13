@@ -1,20 +1,19 @@
 #include "entities.h"
 
-static Sound fxEnemyHit; 
+static Sound fxPlayerHit; 
 static bool soundsLoaded = false;
 
-// ======================================================
-// Funções de Gerenciamento de Áudio (CHAME NO MAIN)
-// ======================================================
+// ----------------------------------------------------
+// Inicializar player
+// ----------------------------------------------------
 void LoadPlayerSounds(void)
 {
     if (!soundsLoaded)
     {
+        // Ajuste o caminho conforme necessário, mantendo o padrão do seu projeto (ex: ../assets)
+        fxPlayerHit = LoadSound("../assets/audio/player_hit.mp3");
         
-        // Tente carregar
-        fxEnemyHit = LoadSound("../assets/audio/player_hit.mp3");
-        
-        SetSoundVolume(fxEnemyHit, 1.0f);
+        SetSoundVolume(fxPlayerHit, 1.0f);
         soundsLoaded = true; 
     }
 }
@@ -23,14 +22,11 @@ void UnloadPlayerSounds(void)
 {
     if (soundsLoaded)
     {
-        UnloadSound(fxEnemyHit);
+        UnloadSound(fxPlayerHit);
         soundsLoaded = false;
     }
-}
+}   
 
-// ----------------------------------------------------
-// Inicializar player
-// ----------------------------------------------------
 void InitPlayer(Player *p)
 {   
     p->hitboxRadius = 18.0f;
@@ -208,8 +204,9 @@ void PlayerTakeDamage(Player *p, float dmg)
 {
     if (!p->alive) return;
 
+    // Toca o som de dano
     if (soundsLoaded) {
-        PlaySound(fxEnemyHit);
+        PlaySound(fxPlayerHit);
     }
 
     p->hp -= dmg;

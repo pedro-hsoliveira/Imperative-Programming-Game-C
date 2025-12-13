@@ -1,33 +1,18 @@
 #include "entities.h"
+#include "raymath.h"
 #include <stdio.h>
-
-// ======================================================
-// Inicializa um inimigo em uma posição específica
-// ======================================================
 
 static Sound fxEnemyHit; 
 static bool soundsLoaded = false;
 
 // ======================================================
-// Funções de Gerenciamento de Áudio (CHAME NO MAIN)
+// Funções de Gerenciamento de Áudio do Inimigo
 // ======================================================
 void LoadEnemySounds(void)
 {
     if (!soundsLoaded)
     {
-        printf("--- TENTANDO CARREGAR O SOM DO INIMIGO ---\n");
-        
-        // Tente carregar
         fxEnemyHit = LoadSound("../assets/audio/enemy_hit.mp3");
-        
-        // VERIFICAÇÃO: Se o som não carregou, o frameCount geralmente é 0 ou stream.buffer é NULL
-        if (fxEnemyHit.frameCount == 0) {
-            printf("ERRO CRÍTICO: O arquivo de som NAO foi carregado!\n");
-            printf("Verifique se o arquivo existe em: ../assets/audio/enemy_hit.wav\n");
-        } else {
-            printf("SUCESSO: Som carregado corretamente!\n");
-        }
-
         SetSoundVolume(fxEnemyHit, 1.0f);
         soundsLoaded = true; 
     }
@@ -42,34 +27,50 @@ void UnloadEnemySounds(void)
     }
 }
 
-void InitEnemy(Enemy *e, Vector2 pos)
-{
-    e->attackCooldown = 0.9f;
-    e->attackRate = 0.8f; 
-    e->position = pos;
-    e->hp = 3.0f;
-    e->maxHp = 2.0f;
-    e->radius = 24.0f;
-    e->speed = 50.0f;
-    e->alive = true;
+// ======================================================
+// Inicializa um inimigo em uma posição específica
+// ======================================================
+void InitEnemy(Enemy *e, Vector2 pos, EnemyType type) {
+    e->type = type;
 
-    e->sprite.sheet = LoadTexture("../assets/sprites/enemy/algovermelho.png");
-    e->sprite.frame = (Rectangle){ 
-        0, 0, e->sprite.sheet.width / 3, e->sprite.sheet.height / 3
-    };
+    switch (type) {
+        case ENEMY_MELEE:
+            e->attackCooldown = 0.9f;
+            e->attackRate = 0.8f;
+            e->position = pos;
+            e->hp = 3.0f;
+            e->maxHp = 3.0f;
+            e->radius = 24.0f;
+            e->speed = 70.0f;
+            e->alive = true;
+            e->sprite.sheet = LoadTexture("../assets/sprites/enemy/algovermelho_teste.png");
+            break;
 
-    e->sprite.currentFrame = 0; 
+        case ENEMY_SLOW_TANK:
+            e->attackCooldown = 0.9f;
+            e->attackRate = 0.8f;
+            e->position = pos;
+            e->hp = 7.0f;
+            e->maxHp = 7.0f;
+            e->radius = 24.0f;
+            e->speed = 40.0f;
+            e->alive = true;
+            e->sprite.sheet = LoadTexture("../assets/sprites/enemy/monstro.png");
+            break;
+    }
+
+    TraceLog(LOG_INFO, "ENEMY SPAWN: Tipo %d em {%.0f, %.0f}", type, pos.x, pos.y);
+
+    e->sprite.frame = (Rectangle){0, 0, e->sprite.sheet.width / 3, e->sprite.sheet.height / 3};
+    e->sprite.currentFrame = 0;
     e->sprite.timer = 0.0f;
-    e->sprite.animSpeed = 0.12f;  
-
+    e->sprite.animSpeed = 0.12f;
 }
 
-static void UpdateEnemyAnimation(Enemy *e, float dt)
-{
+static void UpdateEnemyAnimation(Enemy *e, float dt) {
     e->sprite.timer += dt;
 
-    if (e->sprite.timer >= e->sprite.animSpeed)
-    {
+    if (e->sprite.timer >= e->sprite.animSpeed) {
         e->sprite.timer = 0;
         e->sprite.currentFrame++;
 
@@ -77,7 +78,6 @@ static void UpdateEnemyAnimation(Enemy *e, float dt)
             e->sprite.currentFrame = 0;
 
         int frame = e->sprite.currentFrame;
-
         int col = frame % 3;
         int row = frame / 3;
 
@@ -92,34 +92,26 @@ static void UpdateEnemyAnimation(Enemy *e, float dt)
     }
 }
 
-void EnemyTakeDamage(Enemy *e, float dmg)
-{
+void EnemyTakeDamage(Enemy *e, float dmg) {
     if (!e->alive) return;
 
     e->hp -= dmg;
-
-    // Toca o som apenas uma vez quando toma o dano
+    
+    // Toca o som de dano
     if (soundsLoaded) {
         PlaySound(fxEnemyHit);
     }
 
-    if (e->hp <= 0)
-    {
+    if (e->hp <= 0) {
         e->hp = 0;
         e->alive = false;
-        // Opcional: Tocar um som diferente de morte aqui
     }
 }
- 
-void DamageEnemy(Enemy *e, float dmg)
-{
-    EnemyTakeDamage(e, dmg); // Reutiliza a lógica e o som
-}
+
 // ======================================================
 // Movimento básico: perseguir o player
 // ======================================================
-bool EnemyTryAttack(Enemy *e, Player *p, float dt)
-{
+bool EnemyTryAttack(Enemy *e, Player *p, float dt) {
     if (!e->alive) return false;
     if (!p->alive) return false;
 
@@ -127,57 +119,46 @@ bool EnemyTryAttack(Enemy *e, Player *p, float dt)
     if (e->attackCooldown > 0)
         e->attackCooldown -= dt;
 
-    // Ainda não pode atacar?
     if (e->attackCooldown > 0)
         return false;
 
     // Verificar distância para ataque
     float dist = Vector2Distance(e->position, p->body.position);
 
-    if (dist <= e->radius + p->hitboxRadius)
-    {
-        // Ataca o player da forma correta
+    if (dist <= e->radius + p->hitboxRadius) {
         PlayerTakeDamage(p, 1);
-
-        // Reinicia cooldown
         e->attackCooldown = e->attackRate;
-
         return true;
     }
 
     return false;
 }
 
-//POSIÇÂO
-
-void SpawnEnemiesQuadrants(Enemy enemies[], int count, Rectangle room)
-{
+// POSIÇÃO
+void SpawnEnemiesQuadrants(Enemy enemies[], int count, Rectangle room) {
     int perQuadrant = count / 4;
     int idx = 0;
 
-    for (int q = 0; q < 4; q++)
-    {
+    for (int q = 0; q < 4; q++) {
         float qx = room.x + (q % 2) * (room.width / 2);
         float qy = room.y + (q / 2) * (room.height / 2);
 
-        for (int i = 0; i < perQuadrant; i++)
-        {
+        for (int i = 0; i < perQuadrant; i++) {
             Vector2 pos = {
                 qx + GetRandomValue(40, room.width / 2 - 40),
                 qy + GetRandomValue(40, room.height / 2 - 40)
             };
 
-            InitEnemy(&enemies[idx++], pos);
+            EnemyType newType = (i == 0) ? ENEMY_SLOW_TANK : ENEMY_MELEE;
+            InitEnemy(&enemies[idx++], pos, newType);
         }
     }
 }
 
-void SpawnEnemiesRandom(Enemy enemies[], int count, Rectangle room, Vector2 playerPos)
-{
-    float minDistance = 120.0f;   // distância mínima do player
+void SpawnEnemiesRandom(Enemy enemies[], int count, Rectangle room, Vector2 playerPos) {
+    float minDistance = 120.0f;
 
-    for (int i = 0; i < count; i++)
-    {
+    for (int i = 0; i < count; i++) {
         Vector2 pos;
         int safety = 0;
 
@@ -185,68 +166,70 @@ void SpawnEnemiesRandom(Enemy enemies[], int count, Rectangle room, Vector2 play
             pos.x = room.x + GetRandomValue(50, room.width - 50);
             pos.y = room.y + GetRandomValue(50, room.height - 50);
             safety++;
-
-            // Evitar loop infinito
-            if (safety > 100)
-                break;
+            if (safety > 100) break;
 
         } while (Vector2Distance(pos, playerPos) < minDistance);
 
-        InitEnemy(&enemies[i], pos);
+        EnemyType newType = (GetRandomValue(1, 10) <= 5) ? ENEMY_SLOW_TANK : ENEMY_MELEE;
+        InitEnemy(&enemies[i], pos, newType);
     }
 }
 
+bool EnemyCheckCollisionWithProjectile(Enemy *e, Projectile *pr) {
+    if (!e->alive || !pr->active)
+        return false;
 
-bool EnemyCheckCollisionWithProjectile(Enemy *e, Projectile *pr)
-{
-    if (!e->alive || !pr->active) return false;
     float dist = Vector2Distance(e->position, pr->position);
     return dist <= e->radius + 6;
 }
 
-
-bool EnemyCheckCollisionWithPlayer(Enemy *e, Vector2 playerPos, float radius)
-{
-    if (!e->alive) return false;
+bool EnemyCheckCollisionWithPlayer(Enemy *e, Vector2 playerPos, float radius) {
+    if (!e->alive)
+        return false;
 
     float dist = Vector2Distance(e->position, playerPos);
     return dist <= e->radius + radius;
 }
 
-
 // ======================================================
 // Checa se inimigo encostou no player
 // ======================================================
-bool EnemyHitsPlayer(Enemy *e, Vector2 playerPos, float playerRadius)
-{
+bool EnemyHitsPlayer(Enemy *e, Vector2 playerPos, float playerRadius) {
     float dist = Vector2Distance(e->position, playerPos);
-
     return (dist <= e->radius + playerRadius);
 }
-void UpdateEnemy(Enemy *e, Vector2 playerPos, float dt)
-{
+
+void UpdateEnemy(Enemy *e, Vector2 playerPos, float dt) {
     if (!e->alive) return;
 
-    // Vetor direção = Player - Enemy
     Vector2 dir = Vector2Subtract(playerPos, e->position);
-
     float dist = Vector2Length(dir);
-    if (dist > 1.0f)   
+
+    if (dist > 1.0f)
         dir = Vector2Normalize(dir);
 
-    // Move o inimigo em direção ao player
     e->position.x += dir.x * e->speed * dt;
     e->position.y += dir.y * e->speed * dt;
 
     UpdateEnemyAnimation(e, dt);
+}
 
+// ======================================================
+// Dano no inimigo
+// ======================================================
+void DamageEnemy(Enemy *e, float dmg) {
+    e->hp -= dmg;
+
+    if (e->hp <= 0.0f) {
+        e->alive = false;
+        e->hp = 0.0f;
+    }
 }
 
 // ======================================================
 // Desenhar o inimigo
 // ======================================================
-void DrawEnemy(Enemy *e)
-{
+void DrawEnemy(Enemy *e) {
     if (!e->alive) return;
 
     float scale = 2.0f;
@@ -262,9 +245,8 @@ void DrawEnemy(Enemy *e)
         e->sprite.sheet,
         e->sprite.frame,
         dest,
-        (Vector2){0,0},
+        (Vector2){0, 0},
         0,
         WHITE
     );
 }
-

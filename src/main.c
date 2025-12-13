@@ -28,10 +28,10 @@ int main(void) {
  
     // Initialize audio
     InitAudioDevice();
-
-    LoadEnemySounds();
+    
+    // --- CARREGAR EFEITOS SONOROS ---
     LoadPlayerSounds();
-
+    LoadEnemySounds();
     int quit = 0, first_iteration = 1;
 
     Map current_map;
@@ -382,8 +382,11 @@ int main(void) {
     // unloading gameplay music 
     UnloadMusicStream(musicgame);
     UnloadMusicStream(musicplay);
-    UnloadEnemySounds();
+    
+    // --- DESCARREGAR EFEITOS SONOROS ---
     UnloadPlayerSounds();
+    UnloadEnemySounds();
+
     CloseAudioDevice();
 
     // unloading textures
